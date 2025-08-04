@@ -1,6 +1,10 @@
 import os
 import requests
 
+from models.film import Film
+from models.film_request import FilmRequest
+from models.genre import Genre
+
 class FilmService():
     def __init__(self):
         self.url = "https://api.themoviedb.org/3/discover/movie"
@@ -11,17 +15,27 @@ class FilmService():
         headers = { "Authorization": f"Bearer {self.tmdb_token}" }
         return headers
     
-    def get_random_film(self, genre: str, decade: int, rating: str, page: int):
-        if not decade:
-            return requests.get(f"{self.url}?language=pt-BR&vote_average.gte={rating}&with_genres={genre}&vote_count.gte=250&page={page}", headers = self.compose_headers())
-        
-        return requests.get(f"{self.url}?language=pt-BR&primary_release_date.gte={decade}-01-01&primary_release_date.lte={decade + 9}-12-31&vote_average.gte={rating}&with_genres={genre}&vote_count.gte=250&page={page}", headers = self.compose_headers())
+    def get_random_film(self, filmRequest: FilmRequest, page: int, random_number: int) -> Film:
+        if not filmRequest.decade:
+            response = requests.get(f"{self.url}?language=pt-BR&vote_average.gte={filmRequest.rating}&with_genres={filmRequest.genre}&vote_count.gte=250&page={page}", headers = self.compose_headers())
+            data = response.json()
+            return data["results"][random_number]
 
-    def get_pages(self, genre: str, decade: int, rating: str):
-        if not decade:
-            return requests.get(f"{self.url}?language=pt-BR&vote_average.gte={rating}&with_genres={genre}&vote_count.gte=250", headers = self.compose_headers())
-        
-        return requests.get(f"{self.url}?language=pt-BR&primary_release_date.gte={decade}-01-01&primary_release_date.lte={decade + 9}-12-31&vote_average.gte={rating}&with_genres={genre}&vote_count.gte=250", headers = self.compose_headers())
+        response = requests.get(f"{self.url}?language=pt-BR&primary_release_date.gte={filmRequest.decade}-01-01&primary_release_date.lte={filmRequest.decade + 9}-12-31&vote_average.gte={filmRequest.rating}&with_genres={filmRequest.genre}&vote_count.gte=250&page={page}", headers = self.compose_headers())
+        data = response.json()
+        return data["results"][random_number]
+
+    def get_pages(self, filmRequest: FilmRequest) -> int:
+        if not filmRequest.decade:
+            response = requests.get(f"{self.url}?language=pt-BR&vote_average.gte={filmRequest.rating}&with_genres={filmRequest.genre}&vote_count.gte=250", headers = self.compose_headers())
+            data = response.json()
+            return data["total_pages"]
+
+        response = requests.get(f"{self.url}?language=pt-BR&primary_release_date.gte={filmRequest.decade}-01-01&primary_release_date.lte={filmRequest.decade + 9}-12-31&vote_average.gte={filmRequest.rating}&with_genres={filmRequest.genre}&vote_count.gte=250", headers = self.compose_headers())
+        data = response.json()
+        return data["total_pages"]
     
-    def get_genres(self):
-        return requests.get(self.genre_url, headers=self.compose_headers())
+    def get_genres(self) -> list[Genre]:
+        response = requests.get(self.genre_url, headers=self.compose_headers())
+        data = response.json()
+        return [Genre(genre["id"], genre["name"]) for genre in data["genres"]]
