@@ -1,12 +1,12 @@
 import random
 import discord
-from discord import app_commands
 from discord.ext import commands
 from unidecode import unidecode
 from exceptions.genre_not_found_exception import GenreNotFoundException
 from models.film import Film
 from models.film_request import FilmRequest
 from services.film_service import FilmService
+from views.help_view import HelpView
 
 class FilmCog(commands.Cog):
     def __init__(self, service: FilmService):
@@ -36,28 +36,15 @@ class FilmCog(commands.Cog):
 
     @commands.command()
     async def h(self, ctx: commands.Context):
-        help_text = """• !f - Gera um filme aleatório baseado nos seguintes filtros: gênero, década e nota mínima. Utilize `.` para ignorar um filtro e considerar todos os valores, ou deixe todos os campos em branco para não aplicar nenhum filtro\n
-        Ex: ```!f```
-        ```!f Ação 2010 7```
-        ```!f . 2010 .```\n
-        • !g - Mostra todos os gêneros disponíveis para filtragem\n
-        Ex: ```!g```\n
-        • !h - Mostra informações sobre os comandos do bot\n
-        Ex: ```!h```\n"""
-        embed = discord.Embed()
-        embed.title = "Help"
-        embed.description = help_text
-        await ctx.reply(embed=embed)
+        all_genres = self.service.get_genres()
+        genres_text = '\n'.join(f"• {genre.name}" for genre in all_genres)
+        view = HelpView(genres_text)
+        await ctx.reply(embed=view.pages[0], view=view)
     
     @commands.command()
     async def f(self, ctx: commands.Context, genre: str = "", decade: str = "", rating: str = ""):
         try:
-            if genre == ".":
-                genre = ""
-            if decade == ".":
-                decade = ""
-            if rating == ".":
-                rating = ""
+            genre, decade, rating = ("" if x == "." else x for x in (genre, decade, rating))
 
             genre = unidecode(genre).lower()
             if genre not in self.genres_dict:
@@ -74,16 +61,14 @@ class FilmCog(commands.Cog):
             
             film_request = FilmRequest(self.genres_dict[genre], decade, rating)
             pages = self.service.get_pages(film_request)
-            if pages > 500:
-                page = random.randint(1, 500)
-            else:
-                page = random.randint(1, pages)
+            page = random.randint(1, min(pages, 500))
             
             data = self.service.get_random_film(film_request, page)
             if not data:
                 return await ctx.reply("Nenhum filme encontrado.")
-            allGenres = self.service.get_genres()
-            film = Film(data, allGenres)
+            
+            all_genres = self.service.get_genres()
+            film = Film(data, all_genres)
 
             embed = discord.Embed()
             embed.title = f"{film.title} *({film.release_date[:4]}*)"
@@ -99,9 +84,9 @@ class FilmCog(commands.Cog):
     
     @commands.command()
     async def g(self, ctx: commands.Context):
-        allGenres = self.service.get_genres()
+        all_genres = self.service.get_genres()
         embed = discord.Embed()
         embed.title = "Todos os gêneros"
-        embed.description = '\n'.join(f"• {genre.name}" for genre in allGenres)
+        embed.description = '\n'.join(f"• {genre.name}" for genre in all_genres)
         embed.set_footer(text="Para gêneros com mais de uma palavra, escreva tudo junto, sem espaços\nEx: Ficçãocientífica, CinemaTV")
         await ctx.reply(embed=embed)
