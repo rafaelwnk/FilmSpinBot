@@ -16,7 +16,6 @@ cog = FilmCog(service)
 @bot.event
 async def on_ready():
     await bot.add_cog(cog)
-    await bot.tree.sync()
     await bot.change_presence(status=discord.Status.online, activity=discord.Activity(type=discord.ActivityType.watching, name="!h"))
 
 bot.run(discord_token)

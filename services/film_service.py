@@ -19,11 +19,15 @@ class FilmService():
         if not filmRequest.decade:
             response = requests.get(f"{self.url}?language=pt-BR&vote_average.gte={filmRequest.rating}&with_genres={filmRequest.genre}&vote_count.gte=250&page={page}", headers = self.compose_headers())
             data = response.json()
+            if not data["results"]:
+                return None
             random_number = random.randint(0, len(data["results"]) - 1)
             return data["results"][random_number]
 
-        response = requests.get(f"{self.url}?language=pt-BR&primary_release_date.gte={filmRequest.decade}-01-01&primary_release_date.lte={filmRequest.decade + 9}-12-31&vote_average.gte={filmRequest.rating}&with_genres={filmRequest.genre}&vote_count.gte=250&page={page}", headers = self.compose_headers())
+        response = requests.get(f"{self.url}?language=pt-BR&primary_release_date.gte={int(filmRequest.decade)}-01-01&primary_release_date.lte={int(filmRequest.decade) + 9}-12-31&vote_average.gte={filmRequest.rating}&with_genres={filmRequest.genre}&vote_count.gte=250&page={page}", headers = self.compose_headers())
         data = response.json()
+        if not data["results"]:
+            return None
         random_number = random.randint(0, len(data["results"]) - 1)
         return data["results"][random_number]
 
@@ -33,7 +37,7 @@ class FilmService():
             data = response.json()
             return data["total_pages"]
 
-        response = requests.get(f"{self.url}?language=pt-BR&primary_release_date.gte={filmRequest.decade}-01-01&primary_release_date.lte={filmRequest.decade + 9}-12-31&vote_average.gte={filmRequest.rating}&with_genres={filmRequest.genre}&vote_count.gte=250", headers = self.compose_headers())
+        response = requests.get(f"{self.url}?language=pt-BR&primary_release_date.gte={int(filmRequest.decade)}-01-01&primary_release_date.lte={int(filmRequest.decade) + 9}-12-31&vote_average.gte={filmRequest.rating}&with_genres={filmRequest.genre}&vote_count.gte=250", headers = self.compose_headers())
         data = response.json()
         return data["total_pages"]
     
