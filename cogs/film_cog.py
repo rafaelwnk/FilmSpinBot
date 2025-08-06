@@ -90,3 +90,9 @@ class FilmCog(commands.Cog):
         embed.description = '\n'.join(f"• {genre.name}" for genre in all_genres)
         embed.set_footer(text="Para gêneros com mais de uma palavra, escreva tudo junto, sem espaços\nEx: Ficçãocientífica, CinemaTV")
         await ctx.reply(embed=embed)
+
+    @commands.command()
+    async def s(self, ctx: commands.Context, *, films: str):
+        films_list = [x.strip() for x in films.split(",")]
+        film = random.choice(films_list)
+        await ctx.reply(f"O filme sorteado é: {film}")
