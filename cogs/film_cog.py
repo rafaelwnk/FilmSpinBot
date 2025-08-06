@@ -52,13 +52,13 @@ class FilmCog(commands.Cog):
                 raise GenreNotFoundException(genre)
             
             if decade and not decade.isdigit():
-                raise ValueError(f"'{decade}' não é um número inteiro válido para ano.")
+                raise ValueError(f"'{decade}' não é um número inteiro válido para ano")
 
             if rating:
                 try:
                     float(rating)
                 except ValueError:
-                    raise ValueError(f"'{rating}' não é um número decimal válido.")
+                    raise ValueError(f"'{rating}' não é um número decimal válido")
             
             film_request = FilmRequest(self.genres_dict[genre], decade, rating)
             pages = self.service.get_pages(film_request)
@@ -66,7 +66,7 @@ class FilmCog(commands.Cog):
             
             data = self.service.get_random_film(film_request, page)
             if not data:
-                return await ctx.reply("Nenhum filme encontrado.")
+                return await ctx.reply("Nenhum filme encontrado")
             
             all_genres = self.service.get_genres()
             film = Film(data, all_genres)

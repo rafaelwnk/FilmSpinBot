@@ -11,6 +11,8 @@ class HelpView(discord.ui.View):
                           Deixe todos os campos em branco para não aplicar nenhum filtro\n```!f```""").set_author(name="Help"),
             discord.Embed(title="!g", description=f"""Mostra todos os gêneros disponíveis para filtragem\n```!g```
                           **Gêneros:**\n\n{self.genres_text}\n\n*Para gêneros com mais de uma palavra, escreva tudo junto, sem espaços\nEx: Ficçãocientífica, CinemaTV*""").set_author(name="Help"),
+            discord.Embed(title="!s", description="""Escolhe um filme aleatório entre os que você passar, separados por ' , '\n```!s Interestelar, Donnie Darko, Scott Pilgrim Contra o Mundo```
+                          *Informe pelo menos 2 filmes*""").set_author(name="Help"),
             discord.Embed(title="!h", description="""Mostra informações sobre os comandos do bot\n```!h```""").set_author(name="Help")
         ]
         
