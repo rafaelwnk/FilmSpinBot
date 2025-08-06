@@ -2,6 +2,7 @@ import random
 import discord
 from discord.ext import commands
 from unidecode import unidecode
+from exceptions.film_not_found_exception import FilmNotFoundException
 from exceptions.genre_not_found_exception import GenreNotFoundException
 from exceptions.not_enough_films_exception import NotEnoughFilmsException
 from models.film import Film
@@ -66,7 +67,7 @@ class FilmCog(commands.Cog):
             
             data = self.service.get_random_film(film_request, page)
             if not data:
-                return await ctx.reply("Nenhum filme encontrado")
+                raise FilmNotFoundException()
             
             all_genres = self.service.get_genres()
             film = Film(data, all_genres)
@@ -81,6 +82,8 @@ class FilmCog(commands.Cog):
         except GenreNotFoundException as e:
             await ctx.reply(e)
         except ValueError as e:
+            await ctx.reply(e)
+        except FilmNotFoundException as e:
             await ctx.reply(e)
     
     @commands.command()
