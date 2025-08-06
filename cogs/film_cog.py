@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 from unidecode import unidecode
 from exceptions.genre_not_found_exception import GenreNotFoundException
+from exceptions.not_enough_films_exception import NotEnoughFilmsException
 from models.film import Film
 from models.film_request import FilmRequest
 from services.film_service import FilmService
@@ -92,7 +93,12 @@ class FilmCog(commands.Cog):
         await ctx.reply(embed=embed)
 
     @commands.command()
-    async def s(self, ctx: commands.Context, *, films: str):
-        films_list = [x.strip() for x in films.split(",")]
-        film = random.choice(films_list)
-        await ctx.reply(f"O filme sorteado é: {film}")
+    async def s(self, ctx: commands.Context, *, films: str = ""):
+        try:
+            films_list = [x.strip() for x in films.split(",") if x.strip()]
+            if len(films_list) < 2:
+                raise NotEnoughFilmsException()
+            film = random.choice(films_list)
+            await ctx.reply(f"O filme sorteado é: {film}")
+        except NotEnoughFilmsException as e:
+            await ctx.reply(e)
