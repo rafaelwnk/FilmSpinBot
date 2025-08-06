@@ -1,6 +1,6 @@
 # FilmSpinBot
 
-FilmSpinBot é um bot para Discord do [FilmSpin](https://github.com/rafaelwnk/FilmSpin) que gera filmes aleatórios usando a API do TMDB. Permite filtrar por gênero, década e nota mínima através do comando `!f`. Exibe título, ano de lançamento, gêneros, avaliação, pôster e descrição do filme.
+Bot para Discord do [FilmSpin](https://github.com/rafaelwnk/FilmSpin) que gera filmes aleatórios usando a API do TMDB. Permite filtrar por gênero, década e nota mínima através do comando `!f`. Exibe título, ano de lançamento, gêneros, avaliação, pôster e descrição do filme.
 
 Comandos disponíveis:  
 - `!f` : Gera um filme aleatório com filtros opcionais.  
