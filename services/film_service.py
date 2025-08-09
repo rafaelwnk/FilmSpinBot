@@ -1,47 +1,27 @@
 import os
+from typing import Optional
 import requests
-import random
+from dtos.api_response import ApiResponse
 from models.film import Film
-from models.film_request import FilmRequest
+from dtos.film_request import FilmRequest
 from models.genre import Genre
 
 class FilmService():
     def __init__(self):
-        self.url = "https://api.themoviedb.org/3/discover/movie"
-        self.genre_url = "https://api.themoviedb.org/3/genre/movie/list?language=pt-BR"
-        self.tmdb_token = os.getenv("TMDB_TOKEN")
+        self.api_url = os.getenv("API_URL")
 
-    def compose_headers(self):
-        headers = { "Authorization": f"Bearer {self.tmdb_token}" }
-        return headers
-    
-    def get_random_film(self, filmRequest: FilmRequest, page: int):
-        if not filmRequest.decade:
-            response = requests.get(f"{self.url}?language=pt-BR&vote_average.gte={filmRequest.rating}&with_genres={filmRequest.genre}&vote_count.gte=250&page={page}", headers = self.compose_headers())
-            data = response.json()
-            if not data["results"]:
-                return None
-            
-            return random.choice(data["results"])
-
-        response = requests.get(f"{self.url}?language=pt-BR&primary_release_date.gte={int(filmRequest.decade)}-01-01&primary_release_date.lte={int(filmRequest.decade) + 9}-12-31&vote_average.gte={filmRequest.rating}&with_genres={filmRequest.genre}&vote_count.gte=250&page={page}", headers = self.compose_headers())
-        data = response.json()
-        if not data["results"]:
-            return None
+    def get_random_film(self, film_request: FilmRequest) -> Film | str:
+        response = requests.post(f"{self.api_url}/v1/films", json=film_request.model_dump())
+        result = ApiResponse[Optional[Film]].model_validate(response.json())
+        if not result.is_success:
+            return result.message
         
-        return random.choice(data["results"])
-
-    def get_pages(self, filmRequest: FilmRequest):
-        if not filmRequest.decade:
-            response = requests.get(f"{self.url}?language=pt-BR&vote_average.gte={filmRequest.rating}&with_genres={filmRequest.genre}&vote_count.gte=250", headers = self.compose_headers())
-            data = response.json()
-            return data["total_pages"]
-
-        response = requests.get(f"{self.url}?language=pt-BR&primary_release_date.gte={int(filmRequest.decade)}-01-01&primary_release_date.lte={int(filmRequest.decade) + 9}-12-31&vote_average.gte={filmRequest.rating}&with_genres={filmRequest.genre}&vote_count.gte=250", headers = self.compose_headers())
-        data = response.json()
-        return data["total_pages"]
+        return result.data
     
-    def get_genres(self):
-        response = requests.get(self.genre_url, headers=self.compose_headers())
-        data = response.json()
-        return [Genre(genre["id"], genre["name"]) for genre in data["genres"]]
+    def get_genres(self) -> list[Genre] | str:
+        response = requests.get(f"{self.api_url}/v1/genres")
+        result = ApiResponse[Optional[list[Genre]]].model_validate(response.json())
+        if not result.is_success:
+            return result.message
+        
+        return result.data

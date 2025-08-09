@@ -2,11 +2,10 @@ import random
 import discord
 from discord.ext import commands
 from unidecode import unidecode
-from exceptions.film_not_found_exception import FilmNotFoundException
 from exceptions.genre_not_found_exception import GenreNotFoundException
 from exceptions.not_enough_films_exception import NotEnoughFilmsException
 from models.film import Film
-from models.film_request import FilmRequest
+from dtos.film_request import FilmRequest
 from services.film_service import FilmService
 from views.help_view import HelpView
 
@@ -38,8 +37,14 @@ class FilmCog(commands.Cog):
 
     @commands.command()
     async def h(self, ctx: commands.Context):
-        all_genres = self.service.get_genres()
-        genres_text = '\n'.join(f"• {genre.name}" for genre in all_genres)
+        response = self.service.get_genres()
+
+        if(isinstance(response, str)):
+            genres_text = response
+        else:
+            all_genres = response
+            genres_text = '\n'.join(f"• {genre.name}" for genre in all_genres)
+            
         view = HelpView(genres_text)
         await ctx.reply(embed=view.pages[0], view=view)
     
@@ -52,43 +57,33 @@ class FilmCog(commands.Cog):
             if genre not in self.genres_dict:
                 raise GenreNotFoundException(genre)
             
-            if decade and not decade.isdigit():
-                raise ValueError(f"'{decade}' não é um número inteiro válido para ano")
+            film_request = FilmRequest(genre=self.genres_dict[genre], decade=decade, rating=rating)
+            
+            response = self.service.get_random_film(film_request)
 
-            if rating:
-                try:
-                    float(rating)
-                except ValueError:
-                    raise ValueError(f"'{rating}' não é um número decimal válido")
+            if(isinstance(response, str)):
+                return await ctx.reply(response)
             
-            film_request = FilmRequest(self.genres_dict[genre], decade, rating)
-            pages = self.service.get_pages(film_request)
-            page = random.randint(1, min(pages, 500))
-            
-            data = self.service.get_random_film(film_request, page)
-            if not data:
-                raise FilmNotFoundException()
-            
-            all_genres = self.service.get_genres()
-            film = Film(data, all_genres)
+            film = response
 
             embed = discord.Embed()
-            embed.title = f"{film.title} *({film.release_date[:4]}*)"
+            embed.title = f"{film.title} *({film.release_date}*)"
             embed.description = film.overview
-            embed.set_image(url=f"https://image.tmdb.org/t/p/w500/{film.poster_path}")
-            embed.set_footer(text=f"{", ".join(film.genres)}  • \u2B50 {round(film.vote_average, 1)}")
+            embed.set_image(url=film.poster_path)
+            embed.set_footer(text=f"{", ".join(x.name for x in film.genres)}  • \u2B50 {film.vote_average}")
             await ctx.reply(embed=embed)
         
         except GenreNotFoundException as e:
             await ctx.reply(e)
-        except ValueError as e:
-            await ctx.reply(e)
-        except FilmNotFoundException as e:
-            await ctx.reply(e)
     
     @commands.command()
     async def g(self, ctx: commands.Context):
-        all_genres = self.service.get_genres()
+        response = self.service.get_genres()
+
+        if(isinstance(response, str)):
+            return await ctx.reply(response)
+
+        all_genres = response
         embed = discord.Embed()
         embed.title = "Todos os gêneros"
         embed.description = '\n'.join(f"• {genre.name}" for genre in all_genres)
@@ -101,7 +96,9 @@ class FilmCog(commands.Cog):
             films_list = [x.strip() for x in films.split(",") if x.strip()]
             if len(films_list) < 2:
                 raise NotEnoughFilmsException()
+            
             film = random.choice(films_list)
             await ctx.reply(f"O filme sorteado é: {film}")
+
         except NotEnoughFilmsException as e:
             await ctx.reply(e)

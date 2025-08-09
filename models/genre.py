@@ -1,4 +1,5 @@
-class Genre():
-    def __init__(self, id: int, name: str):
-        self.id = id
-        self.name = name
+from pydantic import BaseModel
+
+class Genre(BaseModel):
+    id: int
+    name: str
