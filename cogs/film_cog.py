@@ -67,7 +67,7 @@ class FilmCog(commands.Cog):
             film = response
 
             embed = discord.Embed()
-            embed.title = f"{film.title} *({film.release_date}*)"
+            embed.title = f"{film.title} *({film.release_year}*)"
             embed.description = film.overview
             embed.set_image(url=film.poster_path)
             embed.set_footer(text=f"{", ".join(x.name for x in film.genres)}  • \u2B50 {film.vote_average}")
