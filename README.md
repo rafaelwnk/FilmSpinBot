@@ -48,7 +48,7 @@ pip install -r requirements.txt
 Crie um arquivo .env na raiz do projeto com as seguintes variáveis:
 ```bash
 BOT_TOKEN=token_do_discord
-TMDB_TOKEN=token_da_api_tmdb
+API_URL=url_filmspin_api
 ```
 
 ### 5. Execute o projeto:
